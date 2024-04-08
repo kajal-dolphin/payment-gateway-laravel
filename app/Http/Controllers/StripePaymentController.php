@@ -2,55 +2,73 @@
 
 namespace App\Http\Controllers;
 
-use Exception;
-use Stripe\StripeClient;
 use Illuminate\Http\Request;
-use Stripe\Exception\CardException;
-use Illuminate\Support\Facades\Redirect;
+use Stripe\Stripe;
+use Stripe\Customer;
+use Stripe\PaymentIntent;
+use Illuminate\Support\Facades\Log;
+use Stripe\StripeClient;
 
 class StripePaymentController extends Controller
 {
-    public function index()
+    public function createPaymentIntent(Request $request)
     {
-        return view('stripe.index');
+        $stripe = new StripeClient('sk_test_51P27HwSHTyiLZUYjC1DyIstykQN0vWcaZnBP2NpfK7ETtTM40CsSExepU2cJLm8bUdDzEJxOYix6jIV9vmYaM6Gb00ZpQW5reS');
+
+        // Create a PaymentIntent with a specified amount and currency
+        $customer = $stripe->customers->create([
+            'name' => "TEST",
+            'address' => [
+                'line1' => 'Ahmedabad',
+                'postal_code' => '380001',
+                'country' => 'US',
+            ],
+        ]);
+
+        // Create a PaymentIntent associated with the customer
+        $paymentIntent = $stripe->paymentIntents->create([
+            'description' => 'Warranty Vault',
+            'amount' => 1000, // Amount in cents
+            'currency' => 'USD',
+            'payment_method_types' => ['card'],
+            'customer' => $customer->id,
+        ]);
+
+        // Log the PaymentIntent data
+        Log::info('PaymentIntent data:', ['paymentIntent' => $paymentIntent]);
+
+        $clientSecret = $paymentIntent->client_secret;
+
+        return response()->json(['clientSecret' => $clientSecret]);
     }
 
-    public function store(Request $request)
+    public function storeNewPayment(Request $request)
     {
-        try {
-            $stripe = new StripeClient(env('STRIPE_SECRET'));
+        // Retrieve the payment method token from the request
+        $paymentMethodToken = $request->stripeToken;
 
+        $stripe = new StripeClient('sk_test_51P27HwSHTyiLZUYjC1DyIstykQN0vWcaZnBP2NpfK7ETtTM40CsSExepU2cJLm8bUdDzEJxOYix6jIV9vmYaM6Gb00ZpQW5reS');
+
+            // Create a customer
             $customer = $stripe->customers->create([
-                'name' => $request->name,
+                'name' => "TEST",
                 'address' => [
                     'line1' => 'Ahmedabad',
                     'postal_code' => '380001',
-                    'city' => 'Ahmedabad',
-                    'state' => 'GUJ',
-                    'country' => 'IN',
+                    'country' => 'US',
                 ],
             ]);
 
-            //paymentIntialize
-            // with this in stripe you can find out all details of payment like customer data, payment details using payment _id
+            // Create a PaymentIntent associated with the customer
             $paymentIntent = $stripe->paymentIntents->create([
-                'amount' => 12345,
-                'currency' => 'usd',
-                'payment_method' => $request->payment_method,
-                'description' => 'Demo payment with stripe',
+                'description' => 'Warranty Vault',
+                'amount' => 1000, // Amount in cents
+                'currency' => 'USD',
                 'payment_method_types' => ['card'],
-                'receipt_email' => $request->email,
-                'confirm' => true,
-                'return_url' => route('payment.success'),
-                'customer' => $customer->id
+                'customer' => $customer->id,
             ]);
-            dd($paymentIntent);
 
-        } catch (CardException $th) {
-            throw new Exception("There was a problem processing your payment", 1);
-        }
-
-        return back()->withSuccess('Payment done.');
-
+        Log::info('PaymentIntent created:', ['paymentIntent' => $paymentIntent]);
+        return redirect()->back()->with('success', 'Payment successful!');
     }
 }

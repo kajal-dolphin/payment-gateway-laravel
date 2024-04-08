@@ -18,6 +18,23 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/payment', [StripePaymentController::class, 'showPaymentForm'])->name('payment.form');
-Route::post('/payment/process', [StripePaymentController::class, 'processPayment'])->name('payment.process');
-Route::get('/payment/success', [StripePaymentController::class, 'paymentSuccess'])->name('payment.success');
+// Route::name('stripe.')
+//     ->controller(StripePaymentController::class)
+//     ->prefix('stripe')
+//     ->group(function () {
+//         Route::get('payment', 'index')->name('index');
+//         Route::post('payment', 'store')->name('store');
+//     });
+
+// Route::get('/stripe-index',[StripePaymentController::class,'index'])->name('stripe.index');
+// Route::post('/stripe-store',[StripePaymentController::class,'store'])->name('stripe.store');
+
+// Route::get('/payment-status',[StripePaymentController::class,'paymentStatus'])->name('payment.status');
+
+// Route::get('/payment-status', function () {
+//     return view('stripe.payment-success');
+// })->name('payment.status');
+
+
+Route::post('/create-payment-intent', [StripePaymentController::class, 'createPaymentIntent']);
+Route::post('/store-payment', [StripePaymentController::class, 'storeNewPayment'])->name('stripe.storenew');
