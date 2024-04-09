@@ -10,9 +10,9 @@
         <div class="panel-body">
             <h1 class="text-3xl md:text-5xl font-extrabold text-center uppercase mb-12 bg-gradient-to-r from-indigo-400 via-purple-500 to-indigo-600 bg-clip-text text-transparent transform -rotate-2">Make A Payment</h1>
             @if (session()->has('success'))
-                <div class="alert alert-success">
-                    {{ session()->get('success') }}
-                </div>
+            <div class="alert alert-success">
+                {{ session()->get('success') }}
+            </div>
             @endif
             <form action="{{ route('stripe.storenew') }}" method="POST" id="card-form">
                 @csrf
@@ -28,7 +28,9 @@
                     <label for="card" class="inline-block font-bold mb-2 uppercase text-sm tracking-wider">Card details</label>
 
                     <div class="bg-gray-100 p-6 rounded-xl">
-                        <div id="card-element"><!-- Stripe Elements Placeholder --></div>
+                        <div id="card-element">
+                            <!-- Stripe Elements Placeholder -->
+                        </div>
                     </div>
                 </div>
                 <button type="submit" class="w-full bg-indigo-500 uppercase rounded-xl font-extrabold text-white px-6 h-12">Pay 👉</button>
@@ -37,8 +39,10 @@
     </div>
 
     <script src="https://js.stripe.com/v3/"></script>
+    <!-- Your HTML file -->
+
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', async function() {
             // Set your Stripe publishable key
             const stripe = Stripe('pk_test_51P27HwSHTyiLZUYjBiJuBlbf23csodgFA5t1z0QKIs9ffPrzLjPN377pdoe3URmOFf9xB0Phb1gQwdZnlQkJm98v00FStSfNZd');
 
@@ -51,7 +55,7 @@
 
             // Handle the form submission
             const form = document.getElementById('card-form');
-            form.addEventListener('submit', async function (event) {
+            form.addEventListener('submit', async function(event) {
                 event.preventDefault();
 
                 // Disable the submit button to prevent multiple submissions
@@ -59,25 +63,24 @@
 
                 // Create a PaymentIntent
                 const response = await fetch('/create-payment-intent', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}' // Include CSRF token for Laravel
-                    },
-                    body: JSON.stringify({
-                        email: document.getElementById('email').value,
-                        description: document.getElementById('card-name').value // Pass the name as description
+                    method: 'POST'
+                    , headers: {
+                        'Content-Type': 'application/json'
+                        , 'X-CSRF-TOKEN': '{{ csrf_token() }}' // Include CSRF token for Laravel
+                    }
+                    , body: JSON.stringify({
+                        email: document.getElementById('email').value
+                        , name: document.getElementById('card-name').value // Pass the name as description
                     })
                 });
 
                 const data = await response.json();
                 if (data.hasOwnProperty('clientSecret')) {
-                    console.log(data.clientSecret);
                     const result = await stripe.confirmCardPayment(data.clientSecret, {
                         payment_method: {
-                            card: cardElement,
-                        },
-                    });
+                            card: cardElement
+                        , }
+                    , });
                     if (result.error) {
                         // Show error to your customer
                         console.error(result.error.message);
@@ -94,6 +97,8 @@
                 }
             });
         });
+
     </script>
+
 </body>
 </html>
